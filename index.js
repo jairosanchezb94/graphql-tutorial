@@ -80,12 +80,14 @@ const resolvers = {
     Query: {
         personCount: () => persons.length,
         allPersons: async (root, args) => {
-            const {data: personsApi} = await axios.get('https://localhost:3000/persons')
-            console.log(personsApi)
-            if (!args.phone) return personsApi
+            const {data: personsFromRestApi} = await axios.get('http://localhost:3000/persons')
+
+            if (!args.phone) return personsFromRestApi
+            
             const byPhone = (person) =>
                 args.phone === 'YES' ? person.phone : !person.phone
-            return personsApi.filter(byPhone)
+                
+            return personsFromRestApi.filter(byPhone)
         }, 
         findPerson: (root, args) => {
             const { name } = args
@@ -105,10 +107,13 @@ const resolvers = {
             return person
         },
         editNumber: (root, args) => {
-            const person = persons.find(p => p.name === args.name)
-            if (!person) return null
+            const personIndex = persons.find(p => p.name === args.name)
+            if (personIndex === -1) return null
+
+            const person = persons[personIndex] 
             const updatedPerson = { ...person, phone: args.phone }
-            persons = persons.map(p => p.name === args.name ? updatedPerson : p)
+            persons[personIndex] = updatedPerson // update persons array
+
             return updatedPerson
         }
     },
